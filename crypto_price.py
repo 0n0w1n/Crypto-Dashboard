@@ -1,16 +1,4 @@
-import tkinter as tk
-from tkinter import ttk
-import websocket
-import json
-import threading
-
-# Background colors
-MAIN_BG = "#37354B"
-WHITE = "#FFFFFF"
-GREEN = "#77FF00"
-GREEN_2 = "#77FF46"
-RED = "#FF0033"
-RED_2 = "#C30003"
+from setup import *
 
 class CryptoTicker:
     
@@ -28,18 +16,18 @@ class CryptoTicker:
         
         # Title
         ttk.Label(self.frame, text=display_name, 
-        font=("Arial Narrow", 26, "bold"),
+        font=("Arial", 26, "bold"),
         background=MAIN_BG,foreground=WHITE).pack()
         
         # Price
         self.price_label = tk.Label(self.frame, text="--,---.--", 
-                                     font=("Arial Narrow", 35, "bold"),
+                                     font=("Arial", 35, "bold"),
                                      background=MAIN_BG)
         self.price_label.pack(pady=10)
         
         # Change
         self.change_label = ttk.Label(self.frame, text="--", 
-                                          font=("Arial Narrow", 18),
+                                          font=("Arial", 18),
                                           background=MAIN_BG)
         self.change_label.pack()
     

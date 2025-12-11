@@ -3,6 +3,7 @@ from tkinter import ttk
 import websocket
 import json
 import threading
+import requests
 
 # Background colors
 MAIN_BG = "#37354B"
@@ -14,3 +15,4 @@ RED_2 = "#C30003"
 BACKGROUND = "#212237"
 INNER_BG = "#616483"
 TABLE_BG = "#302746"
+PURPLE = "#BA89FF"

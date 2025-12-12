@@ -12,7 +12,7 @@ class Overall_price:
         self.frame.propagate(False)
         self.label = tk.Label(self.frame, text="PRICE",
                               font=("Arial", 15), fg=WHITE, bg=MAIN_BG)
-        self.label.grid(row=0, column=0,padx=(5,0))
+        self.label.grid(row=0, column=0, padx=(5, 0))
 
         # List of currency to show
         self.TICKER_PAIRS = [
@@ -39,6 +39,7 @@ class Overall_price:
             self.frame.grid_rowconfigure(i, weight=1)
 
         # customize ticker from CryptoTicker class
+        print("Starting Overall Crypto Price Connection")
         for ticker in self.all_tickers:
             ticker.border.config(bg=MAIN_BG)
 
@@ -50,10 +51,11 @@ class Overall_price:
 
             ticker.change_label.pack_forget()
             ticker.start()
-        
+
         # Create button to open crypto_price
-        self.btn = tk.Button(self.frame,command=self.open_crypto_price,text="☰",font=("Arial",10),fg=BUTTON,bg=BUTTON_BG)
-        self.btn.grid(row=0,column=0,padx=5,pady=5,sticky="w")
+        self.btn = tk.Button(self.frame, command=self.open_crypto_price, text="☰", font=(
+            "Arial", 10), fg=BUTTON, bg=BUTTON_BG)
+        self.btn.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.c = 0
 
     def open_crypto_price(self):
@@ -65,3 +67,8 @@ class Overall_price:
             self.root.mainloop()
         else:
             print("Crypto Price is already open")
+
+    def on_closing(self):
+        print("Stopping Overall Crypto Price Connection")
+        for ticker in self.all_tickers:
+            ticker.stop()

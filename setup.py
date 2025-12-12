@@ -4,6 +4,11 @@ import websocket
 import json
 import threading
 import requests
+import matplotlib.pyplot as plt
+from datetime import datetime
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 # Background colors
 MAIN_BG = "#37354B"

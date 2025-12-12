@@ -3,6 +3,7 @@ from orderbook import OrderBookSnapshot
 from stat_table import Statistics
 from crypto_price import CryptoTicker
 from overall_crypto_price import Overall_price
+from candle_stick import CandleStick
 
 
 class MainDashBoard:
@@ -12,6 +13,8 @@ class MainDashBoard:
         self.root.title("Crypto Dashboard")
         self.root.geometry("1000x600")
         self.root.configure(bg=BACKGROUND)
+
+        print("\nStarting Websocket Connection")  # Starting text
 
         # Title
         self.frame = tk.Frame(root, bg=MAIN_BG)
@@ -44,38 +47,52 @@ class MainDashBoard:
         ]
 
         # Create frame
-        self.crypto_frame = tk.Frame(self.root,relief="solid",bg=BACKGROUND)
+        self.crypto_frame = tk.Frame(self.root, relief="solid", bg=BACKGROUND)
         self.crypto_frame.pack(side='top', fill='x', padx=10, pady=10)
-        
+
         # Create crypto price
         self.button = []
-        for i,(symbol,display) in enumerate(self.main_crypto):
+        self.main_crypto_display = []
+        for i, (symbol, display) in enumerate(self.main_crypto):
             self.coin = CryptoTicker(self.crypto_frame, symbol, display)
 
             # Customize to fit main dashboard
             self.coin.border.configure(bg=BACKGROUND)
-            self.coin.border.config(width=140,height=75)
+            self.coin.border.config(width=140, height=75)
             self.coin.border.propagate(False)
             self.coin.price_label.pack_configure(pady=0)
-            self.coin.border.pack(pady=7,padx=11,side=tk.LEFT,fill=tk.X,expand=True)
-            self.coin.title.config(font=("Arial", 10))
+            self.coin.border.pack(
+                pady=7, padx=11, side=tk.LEFT, fill=tk.X, expand=True)
+            self.coin.title.config(
+                font=("Arial", 10), background='black', anchor="center")
+            self.coin.title.pack_configure(fill="x")
             self.coin.price_label.config(font=("Arial", 14))
-            self.coin.change_label.config(font=("Arial",8))
-            self.coin.start()
+            self.coin.change_label.config(font=("Arial", 8))
+
+            self.main_crypto_display.append(self.coin)
 
             # Create button to change main coin
-            self.btn = tk.Button(self.coin.frame,text="►",font=("Arial",6),
-                                 bg=BUTTON_BG,fg=BUTTON,command=lambda d=display: self.change_main_coin(d))
-            self.btn.place(x=4,y=52)
+            self.btn = tk.Button(self.coin.frame, text="►", font=("Arial", 6),
+                                 bg=BUTTON_BG, fg=BUTTON, command=lambda d=display: self.change_main_coin(d))
+            self.btn.place(x=4, y=52)
+
+        # Start all coin
+        print("Starting Main Crypto Price Connection")
+        for i in self.main_crypto_display:
+            i.start()
 
         # Candle stick Frame
-        self.candle_stick_frame = tk.Frame(self.root,bg=MAIN_BG)
-        self.candle_stick_frame.pack(side=tk.LEFT,fill=tk.BOTH,padx=21,pady=(0,20),expand=True)
+        self.candle_stick_frame = tk.Frame(self.root, bg=MAIN_BG)
+        self.candle_stick_frame.pack(
+            side=tk.LEFT, fill=tk.BOTH, padx=21, pady=(0, 20), expand=True)
+        self.candle_stick_frame.propagate(False)
+        self.candle_stick = CandleStick(self.candle_stick_frame)
+        self.candle_stick.pack(fill=tk.BOTH, expand=True)
 
         # Overall Price table
         self.overall_price = Overall_price(self.root)
 
-    def change_main_coin(self,symbol):
+    def change_main_coin(self, symbol):
         self.current = symbol
 
         # Update
@@ -83,7 +100,29 @@ class MainDashBoard:
         self.orderbook.change_symbol(self.current)
         self.stat.change_symbol(self.current)
 
+    def on_closing(self):
+        print("\nStopping all WebSocket connections...")  # Stoping Text
+
+        # Closing another window First
+        try:  # use try in case that naver open it
+            if self.overall_price.app.is_active == True:
+                self.overall_price.app.on_closing()
+        except:
+            pass
+
+        # Closing every websocket
+        self.orderbook.on_closing()
+        self.stat.on_closing()
+        self.overall_price.on_closing()
+        print("Stopping Main Crypto Price Connection")
+        for ticker in self.main_crypto_display:
+            ticker.stop()
+
+        self.root.destroy()
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = MainDashBoard(root)
+    root.protocol("WM_DELETE_WINDOW", app.on_closing)
     root.mainloop()

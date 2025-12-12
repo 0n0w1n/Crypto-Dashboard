@@ -4,16 +4,19 @@ from setup import *
 class Statistics:
     def __init__(self, parent, current):
         self.root = parent
-        self.symbol = current.lower().replace("/", "")
+        self.current = current
+        self.symbol = self.current.lower().replace("/", "")
+        self.is_active = True
 
         # Setup url
         self.last_trade_ws = f"{self.symbol}@trade"
         self.current_ticker_ws = f"{self.symbol}@ticker"
         self.kline1h = f"{self.symbol}@kline_1h"
         self.best_bid_ask_ws = f"{self.symbol}@bookTicker"
-        # Combine 3 urls in one var
+
+        # Combine 3 urls in one
         self.multi_url = f"wss://stream.binance.com:9443/stream?streams={self.last_trade_ws}/{self.current_ticker_ws}/{self.kline1h}/{self.best_bid_ask_ws}"
-        print(f"Generated Multi-URL: {self.multi_url}")
+
         # Create table
         self.table = tk.Frame(self.root, bg=TABLE_BG, height=200)
         self.table.propagate(False)
@@ -55,8 +58,15 @@ class Statistics:
         # Start market cap
         self.marketcap()
 
-    def change_symbol(self,symbol):
+    def change_symbol(self, symbol):
+        # Check for deactivate first
+        if self.ws:
+            self.ws.close()
+            print(f"Stat Table ({self.current}) Closed")
+
+        self.is_active = False
         self.symbol = symbol.lower().replace("/", "")
+        self.current = symbol
 
         # Update
         self.last_trade_ws = f"{self.symbol}@trade"
@@ -64,7 +74,8 @@ class Statistics:
         self.kline1h = f"{self.symbol}@kline_1h"
         self.best_bid_ask_ws = f"{self.symbol}@bookTicker"
         self.multi_url = f"wss://stream.binance.com:9443/stream?streams={self.last_trade_ws}/{self.current_ticker_ws}/{self.kline1h}/{self.best_bid_ask_ws}"
-        self.ws.close()
+
+        self.is_active = True
         self.start()
         self.marketcap()
 
@@ -72,26 +83,32 @@ class Statistics:
         self.ws = websocket.WebSocketApp(
             self.multi_url,
             on_message=self.on_message,
-            on_error=lambda ws, err: print(f"{self.symbol} error: {err}"),
-            on_close=lambda ws, s, m: print(f"{self.symbol} closed"),
-            on_open=lambda ws: print(f"{self.symbol} connected"))
+            on_error=lambda ws, err: print(
+                f"Stat Table ({self.current}) Error: {err}"),
+            on_close=lambda ws, s, m: print("", end=""),
+            on_open=lambda ws: print(f"Stat Table ({self.current}) Connected"))
 
         threading.Thread(target=self.ws.run_forever, daemon=True).start()
 
     def on_message(self, ws, message):
-        data = json.loads(message)
-        name = data['stream']
-        stream_data = data['data']
+        try:
+            # Check for active and table exist
+            if self.is_active and self.table.winfo_exists():
+                data = json.loads(message)
+                name = data['stream']
+                stream_data = data['data']
 
-        # Check name of each api for call different on_message
-        if name == f"{self.symbol}@trade":
-            self.on_message1(ws, stream_data)
-        elif name == f"{self.symbol}@ticker":
-            self.on_message2(ws, stream_data)
-        elif name == f"{self.symbol}@kline_1h":
-            self.on_message3(ws, stream_data)
-        elif name == f"{self.symbol}@bookTicker":
-            self.on_message4(ws, stream_data)
+                # Check name of each api for call different on_message
+                if name == f"{self.symbol}@trade":
+                    self.on_message1(ws, stream_data)
+                elif name == f"{self.symbol}@ticker":
+                    self.on_message2(ws, stream_data)
+                elif name == f"{self.symbol}@kline_1h":
+                    self.on_message3(ws, stream_data)
+                elif name == f"{self.symbol}@bookTicker":
+                    self.on_message4(ws, stream_data)
+        except tk.TclError:
+            pass
 
     def on_message1(self, ws, data):
         self.last_trade_price2.config(text=f"{float(data['p']):.2f}")
@@ -117,6 +134,7 @@ class Statistics:
         # Calculate 1h change
         change1hour = ((close_price-open_price)*100)/open_price
         self.change12.config(text=f"{change1hour:.2f}%")
+
         # Change colors
         if change1hour < 0:
             self.change12.config(fg=RED)
@@ -166,3 +184,10 @@ class Statistics:
 
         # Display market 1 time when start program
         self.market_cap2.config(text=f"{float(market_cap)/1000000000:.2f}B")
+
+    def on_closing(self):
+        if self.ws:
+            self.is_active = False
+            self.ws.close()
+            print(f"Stat Table ({self.current}) Closed")
+        self.root.destroy()

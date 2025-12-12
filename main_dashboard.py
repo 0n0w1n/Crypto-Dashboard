@@ -2,6 +2,7 @@ from setup import *
 from orderbook import OrderBookSnapshot
 from stat_table import Statistics
 from crypto_price import CryptoTicker
+from overall_crypto_price import Overall_price
 
 
 class MainDashBoard:
@@ -66,6 +67,13 @@ class MainDashBoard:
             self.btn = tk.Button(self.coin.frame,text="►",font=("Arial",6),
                                  bg=BUTTON_BG,fg=BUTTON,command=lambda d=display: self.change_main_coin(d))
             self.btn.place(x=4,y=52)
+
+        # Candle stick Frame
+        self.candle_stick_frame = tk.Frame(self.root,bg=MAIN_BG)
+        self.candle_stick_frame.pack(side=tk.LEFT,fill=tk.BOTH,padx=21,pady=(0,20),expand=True)
+
+        # Overall Price table
+        self.overall_price = Overall_price(self.root)
 
     def change_main_coin(self,symbol):
         self.current = symbol

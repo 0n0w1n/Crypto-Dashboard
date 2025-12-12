@@ -102,6 +102,7 @@ class MultiTickerApp:
         self.root = root
         self.root.title("Crypto Dashboard")
         self.root.geometry("1000x600")
+        self.active = True
         
         # List of currency to show
         self.TICKER_PAIRS = [
@@ -137,6 +138,7 @@ class MultiTickerApp:
     def on_closing(self):
         """Clean up when closing."""
         print("Stopping all WebSocket connections...")
+        self.active = False
         for ticker in self.all_tickers:
             ticker.stop()
         self.root.destroy()

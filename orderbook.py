@@ -42,6 +42,13 @@ class OrderBookSnapshot:
             self.data.append(lbl)
             lbl.pack()
 
+    def change_symbol(self,symbol):
+        self.symbol = symbol.lower().replace("/","")
+        # Update
+        self.ws_url = f"wss://stream.binance.com:9443/ws/{self.symbol}@depth10"
+        self.ws.close()
+        self.start()
+
     def on_message(self,ws,message):
         # Incoming Order Book data and updates the list
         data = json.loads(message)
@@ -55,7 +62,7 @@ class OrderBookSnapshot:
         self.bid_sell = [[float(y) for y in x] for x in bids_sells[:10]]
 
         for i,lbl in enumerate(self.data):
-            lbl.config(text=f"{self.bid_sell[i][0]:<33.2f} {self.bid_sell[i][1]:.2f}")
+            lbl.config(text=f"{self.bid_sell[i][0]:.2f} {self.bid_sell[i][1]:>33.2f}")
 
     def start(self):
         self.ws = websocket.WebSocketApp(

@@ -4,7 +4,7 @@ from setup import *
 class Statistics:
     def __init__(self, parent, current):
         self.root = parent
-        self.symbol = self.symbol = current.lower().replace("/", "")
+        self.symbol = current.lower().replace("/", "")
 
         # Setup url
         self.last_trade_ws = f"{self.symbol}@trade"
@@ -55,6 +55,19 @@ class Statistics:
         # Start market cap
         self.marketcap()
 
+    def change_symbol(self,symbol):
+        self.symbol = symbol.lower().replace("/", "")
+
+        # Update
+        self.last_trade_ws = f"{self.symbol}@trade"
+        self.current_ticker_ws = f"{self.symbol}@ticker"
+        self.kline1h = f"{self.symbol}@kline_1h"
+        self.best_bid_ask_ws = f"{self.symbol}@bookTicker"
+        self.multi_url = f"wss://stream.binance.com:9443/stream?streams={self.last_trade_ws}/{self.current_ticker_ws}/{self.kline1h}/{self.best_bid_ask_ws}"
+        self.ws.close()
+        self.start()
+        self.marketcap()
+
     def start(self):
         self.ws = websocket.WebSocketApp(
             self.multi_url,
@@ -90,7 +103,7 @@ class Statistics:
         if float(data['P']) < 0:
             self.change242.config(fg=RED)
         else:
-            self.change12.config(text=f"+{float(data['P']):.2f}%", fg=GREEN)
+            self.change242.config(text=f"+{float(data['P']):.2f}%", fg=GREEN)
 
         # 24h volume
         self.vol242.config(text=f"{float(data['q'])/1000000:.2f}M")

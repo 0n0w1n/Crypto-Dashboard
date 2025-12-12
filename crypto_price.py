@@ -13,11 +13,13 @@ class CryptoTicker:
         self.border = tk.Frame(parent,bg='white')
         self.frame = tk.Frame(self.border,bg=MAIN_BG)
         self.frame.pack(padx=1,pady=1,fill=tk.BOTH,expand=True)
+
         
         # Title
-        ttk.Label(self.frame, text=display_name, 
+        self.title = ttk.Label(self.frame, text=display_name, 
         font=("Arial", 26, "bold"),
-        background=MAIN_BG,foreground=WHITE).pack()
+        background=MAIN_BG,foreground=WHITE)
+        self.title.pack()
         
         # Price
         self.price_label = tk.Label(self.frame, text="--,---.--", 

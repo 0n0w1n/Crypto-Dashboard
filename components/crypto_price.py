@@ -1,5 +1,14 @@
-from setup import *
+# Tkinter
+import tkinter as tk
+from tkinter import ttk
 
+# API
+import websocket
+import json
+import threading
+import requests
+
+import config as C
 
 class CryptoTicker:
 
@@ -12,25 +21,25 @@ class CryptoTicker:
 
         # Create UI
         self.border = tk.Frame(parent, bg='white')
-        self.frame = tk.Frame(self.border, bg=MAIN_BG)
+        self.frame = tk.Frame(self.border, bg=C.MAIN_BG)
         self.frame.pack(padx=1, pady=1, fill=tk.BOTH, expand=True)
 
         # Title
         self.title = ttk.Label(self.frame, text=display_name,
                                font=("Arial", 26, "bold"),
-                               background=MAIN_BG, foreground=WHITE)
+                               background=C.MAIN_BG, foreground=C.WHITE)
         self.title.pack()
 
         # Price
         self.price_label = tk.Label(self.frame, text="--,---.--",
                                     font=("Arial", 35, "bold"),
-                                    background=MAIN_BG)
+                                    background=C.MAIN_BG)
         self.price_label.pack(pady=10)
 
         # Change
         self.change_label = ttk.Label(self.frame, text="--",
                                       font=("Arial", 18),
-                                      background=MAIN_BG)
+                                      background=C.MAIN_BG)
         self.change_label.pack()
 
     def start(self):
@@ -86,11 +95,11 @@ class CryptoTicker:
                 return
 
             # For Main price
-            color = GREEN if change >= 0 else RED
+            color = C.GREEN if change >= 0 else C.RED
             self.price_label.config(text=f"{price:,.2f}", fg=color)
 
             # For changing percent
-            color = GREEN_2 if change >= 0 else RED_2
+            color = C.GREEN_2 if change >= 0 else C.RED_2
             sign = "+" if change >= 0 else ""
             self.change_label.config(
                 text=f"{sign}{change:,.2f} ({sign}{percent:.2f}%)",
@@ -127,7 +136,7 @@ class MultiTickerApp:
         self.all_tickers = []
 
         # Create ticker panel
-        ticker_frame = tk.Frame(root, bg=MAIN_BG)
+        ticker_frame = tk.Frame(root, bg=C.MAIN_BG)
         ticker_frame.pack(fill=tk.BOTH, expand=True)
 
         # Expand column and row equally

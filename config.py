@@ -4,10 +4,7 @@ import websocket
 import json
 import threading
 import requests
-import matplotlib.pyplot as plt
-from datetime import datetime
-import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 
 # Background colors
@@ -23,3 +20,12 @@ TABLE_BG = "#302746"
 PURPLE = "#BA89FF"
 BUTTON = "#AF6DFF"
 BUTTON_BG = "#5C4895"
+
+# List of currency to show
+TICKER_PAIRS = [
+    ("BTCUSDT", "BTC/USDT"), ("ETHUSDT", "ETH/USDT"),
+    ("XRPUSDT", "XRP/USDT"), ("BNBUSDT", "BNB/USDT"),
+    ("SOLUSDT", "SOL/USDT"), ("TRXUSDT", "TRX/USDT"),
+    ("DOGEUSDT", "DOGE/USDT"), ("ADAUSDT", "ADA/USDT"),
+    ("BCHUSDT", "BCH/USDT")
+    ]

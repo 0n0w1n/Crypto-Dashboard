@@ -1,4 +1,20 @@
-from setup import *
+# Import Tkinter
+import tkinter as tk
+from tkinter import ttk
+
+# For API
+import websocket
+import json
+import threading
+import requests
+
+# Candle stick drawing
+import matplotlib.pyplot as plt
+from datetime import datetime
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+import config as C
 
 
 class CandleStick(tk.Frame):
@@ -39,7 +55,7 @@ class CandleStick(tk.Frame):
             self.dates.append(time)
 
             # Change color
-            color = GREEN_2 if close_price >= open_price else RED
+            color = C.GREEN_2 if close_price >= open_price else C.RED
 
             # Wick of candle stick
             self.x.vlines(i, low_price, high_price, color=color, linewidth=1)
@@ -56,10 +72,10 @@ class CandleStick(tk.Frame):
         self.x.set_xticklabels(self.dates, rotation=45, fontsize=8)
 
         # Set Color
-        self.x.tick_params(axis='x', colors=WHITE)
-        self.x.tick_params(axis='y', colors=WHITE)
-        self.x.set_facecolor(MAIN_BG)
-        self.fig.set_facecolor(MAIN_BG)
+        self.x.tick_params(axis='x', colors=C.WHITE)
+        self.x.tick_params(axis='y', colors=C.WHITE)
+        self.x.set_facecolor(C.MAIN_BG)
+        self.fig.set_facecolor(C.MAIN_BG)
 
         self.canvas = FigureCanvasTkAgg(
             self.fig, master=self)

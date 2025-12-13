@@ -1,9 +1,16 @@
-from setup import *
-from orderbook import OrderBookSnapshot
-from stat_table import Statistics
-from crypto_price import CryptoTicker
-from overall_crypto_price import Overall_price
-from candle_stick import CandleStick
+# Import conponents
+from components.orderbook import OrderBookSnapshot
+from components.stat_table import Statistics
+from components.crypto_price import CryptoTicker
+from components.main_crypto_price import MainCryptoPrice
+from components.overall_crypto_price import Overall_price
+from components.candle_stick import CandleStick
+
+# Tkinter
+import tkinter as tk
+from tkinter import ttk
+
+import config as C
 
 
 class MainDashBoard:
@@ -12,23 +19,23 @@ class MainDashBoard:
         self.root = root
         self.root.title("Crypto Dashboard")
         self.root.geometry("1000x600")
-        self.root.configure(bg=BACKGROUND)
+        self.root.configure(bg=C.BACKGROUND)
 
         print("\nStarting Websocket Connection")  # Starting text
 
         # Title
-        self.frame = tk.Frame(root, bg=MAIN_BG)
+        self.frame = tk.Frame(root, bg=C.MAIN_BG)
         self.frame.pack(fill="x")
 
-        self.Title = tk.Label(self.frame, bg=MAIN_BG, text=" DashBoard",
+        self.Title = tk.Label(self.frame, bg=C.MAIN_BG, text=" DashBoard",
                               font=("Arial", 30), fg='white')
         self.Title.pack(side=tk.LEFT)
-        self.current_dashboard = tk.Label(self.frame, bg=MAIN_BG, text=self.current,
+        self.current_dashboard = tk.Label(self.frame, bg=C.MAIN_BG, text=self.current,
                                           font=("Arial", 13), fg='white')
         self.current_dashboard.pack(side=tk.LEFT, pady=(18, 0))
 
-        # Left Menu
-        self.frame2 = tk.Frame(root, bg=MAIN_BG)
+        # Left Menu Frame
+        self.frame2 = tk.Frame(root, bg=C.MAIN_BG)
         self.frame2.pack(pady=1, side=tk.LEFT, fill="y")
 
         # Order book table
@@ -37,52 +44,14 @@ class MainDashBoard:
         # Stat table
         self.stat = Statistics(self.frame2, self.current)
 
-# Main Crypto Price Part
-
-        # Main crypto Price
-        self.main_crypto = [
-            ("BTCUSDT", "BTC/USDT"), ("ETHUSDT", "ETH/USDT"),
-            ("XRPUSDT", "XRP/USDT"), ("BNBUSDT", "BNB/USDT"),
-            ("SOLUSDT", "SOL/USDT"),
-        ]
-
-        # Create frame
-        self.crypto_frame = tk.Frame(self.root, relief="solid", bg=BACKGROUND)
+        # Main Crypto Price
+        self.crypto_frame = tk.Frame(self.root, relief="solid", bg=C.BACKGROUND)
         self.crypto_frame.pack(side='top', fill='x', padx=10, pady=10)
 
-        # Create crypto price
-        self.button = []
-        self.main_crypto_display = []
-        for i, (symbol, display) in enumerate(self.main_crypto):
-            self.coin = CryptoTicker(self.crypto_frame, symbol, display)
-
-            # Customize to fit main dashboard
-            self.coin.border.configure(bg=BACKGROUND)
-            self.coin.border.config(width=140, height=75)
-            self.coin.border.propagate(False)
-            self.coin.price_label.pack_configure(pady=0)
-            self.coin.border.pack(
-                pady=7, padx=11, side=tk.LEFT, fill=tk.X, expand=True)
-            self.coin.title.config(
-                font=("Arial", 10), background='black', anchor="center")
-            self.coin.title.pack_configure(fill="x")
-            self.coin.price_label.config(font=("Arial", 14))
-            self.coin.change_label.config(font=("Arial", 8))
-
-            self.main_crypto_display.append(self.coin)
-
-            # Create button to change main coin
-            self.btn = tk.Button(self.coin.frame, text="►", font=("Arial", 6),
-                                 bg=BUTTON_BG, fg=BUTTON, command=lambda d=display: self.change_main_coin(d))
-            self.btn.place(x=4, y=52)
-
-        # Start all coin
-        print("Starting Main Crypto Price Connection")
-        for i in self.main_crypto_display:
-            i.start()
+        self.main_crypto_display = MainCryptoPrice(self.crypto_frame,self.change_main_coin)
 
         # Candle stick Frame
-        self.candle_stick_frame = tk.Frame(self.root, bg=MAIN_BG)
+        self.candle_stick_frame = tk.Frame(self.root, bg=C.MAIN_BG)
         self.candle_stick_frame.pack(
             side=tk.LEFT, fill=tk.BOTH, padx=21, pady=(0, 20), expand=True)
         self.candle_stick_frame.propagate(False)
@@ -92,7 +61,7 @@ class MainDashBoard:
         # Overall Price table
         self.overall_price = Overall_price(self.root)
 
-    def change_main_coin(self, symbol):
+    def change_main_coin(self, symbol): # Changing main coin from main crypto price button
         self.current = symbol
 
         # Update
@@ -115,7 +84,7 @@ class MainDashBoard:
         self.stat.on_closing()
         self.overall_price.on_closing()
         print("Stopping Main Crypto Price Connection")
-        for ticker in self.main_crypto_display:
+        for ticker in self.main_crypto_display.main_crypto_display:
             ticker.stop()
 
         self.root.destroy()

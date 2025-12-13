@@ -1,4 +1,14 @@
-from setup import *
+# Tkinter
+import tkinter as tk
+from tkinter import ttk
+
+# API
+import websocket
+import json
+import threading
+import requests
+
+import config as C
 
 
 class Statistics:
@@ -18,7 +28,7 @@ class Statistics:
         self.multi_url = f"wss://stream.binance.com:9443/stream?streams={self.last_trade_ws}/{self.current_ticker_ws}/{self.kline1h}/{self.best_bid_ask_ws}"
 
         # Create table
-        self.table = tk.Frame(self.root, bg=TABLE_BG, height=200)
+        self.table = tk.Frame(self.root, bg=C.TABLE_BG, height=200)
         self.table.propagate(False)
         self.table.pack(pady=10, padx=10, fill="x")
         self.table.grid_columnconfigure(0, minsize=100)
@@ -41,12 +51,12 @@ class Statistics:
 
             # First Column for name of each data
             name_label = tk.Label(self.table, text=name,
-                                  font=("Arial", 7), fg=PURPLE, bg=TABLE_BG)
+                                  font=("Arial", 7), fg=C.PURPLE, bg=C.TABLE_BG)
             name_label.grid(row=row, column=0, sticky="w")
 
             # Second column for value
             value_label = tk.Label(self.table, text=val,
-                                   font=("Arial", 7), fg=WHITE, bg=TABLE_BG)
+                                   font=("Arial", 7), fg=C.WHITE, bg=C.TABLE_BG)
             value_label.grid(row=row, column=1, sticky="e")
 
             # Use setattr to create variable for label
@@ -118,9 +128,9 @@ class Statistics:
         self.change242.config(text=f"{float(data['P']):.2f}%")
         # Change colors
         if float(data['P']) < 0:
-            self.change242.config(fg=RED)
+            self.change242.config(fg=C.RED)
         else:
-            self.change242.config(text=f"+{float(data['P']):.2f}%", fg=GREEN)
+            self.change242.config(text=f"+{float(data['P']):.2f}%", fg=C.GREEN)
 
         # 24h volume
         self.vol242.config(text=f"{float(data['q'])/1000000:.2f}M")
@@ -137,9 +147,9 @@ class Statistics:
 
         # Change colors
         if change1hour < 0:
-            self.change12.config(fg=RED)
+            self.change12.config(fg=C.RED)
         else:
-            self.change12.config(text=f"+{change1hour:.2f}%", fg=GREEN)
+            self.change12.config(text=f"+{change1hour:.2f}%", fg=C.GREEN)
 
         # 1H volume
         self.vol12.config(text=f"{float(kline['q'])/1000000:.2f}M")

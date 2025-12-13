@@ -1,4 +1,14 @@
-from setup import *
+# Tkinter
+import tkinter as tk
+from tkinter import ttk
+
+# API
+import websocket
+import json
+import threading
+import requests
+
+import config as C
 
 
 class OrderBookSnapshot:
@@ -8,32 +18,32 @@ class OrderBookSnapshot:
         self.show = "ASK (SELLS)"  # Set default
         self.is_active = True
 
-        self.order = tk.Label(self.root, bg=INNER_BG, text="Order Book Snapshot", font=(
+        self.order = tk.Label(self.root, bg=C.INNER_BG, text="Order Book Snapshot", font=(
             "Arial", 10), fg='white')
         self.order.pack(padx=20, pady=(0, 5))
 
         self.title = tk.Button(self.root, command=self.ask_bid, text=f"▶ {self.show}", font=(
-            "Arial", 8), bg=INNER_BG, fg='white')
+            "Arial", 8), bg=C.INNER_BG, fg='white')
         self.title.pack(side=tk.TOP)
 
         self.hl = tk.Label(self.root, text="HIGH → LOW",
-                           bg=MAIN_BG, fg=WHITE, font=("Arial", 8))
+                           bg=C.MAIN_BG, fg=C.WHITE, font=("Arial", 8))
         self.hl.pack(anchor="nw")
 
         # Top 10 BID/ASK table
-        self.table = tk.Frame(self.root, bg=TABLE_BG, height=235)
+        self.table = tk.Frame(self.root, bg=C.TABLE_BG, height=235)
         self.table.propagate(False)
         self.table.pack(padx=10, fill="x")
 
         self.tablename = tk.Label(
-            self.table, text=self.current_order_book, bg=TABLE_BG, fg=WHITE, font=("Arial", 12))
+            self.table, text=self.current_order_book, bg=C.TABLE_BG, fg=C.WHITE, font=("Arial", 12))
         self.tablename.pack(padx=10, fill="x")
         self.line = tk.Label(self.table, text="━"*11,
-                             fg=WHITE, background=TABLE_BG)
+                             fg=C.WHITE, background=C.TABLE_BG)
         self.line.place(x=6, y=15)
 
         self.colname = tk.Label(self.table, text=f"{"Price":<20} Quantity", font=(
-            "Arial", 10), fg=WHITE, bg=TABLE_BG)
+            "Arial", 10), fg=C.WHITE, bg=C.TABLE_BG)
         self.colname.pack(pady=5)
 
         # Arrange layer
@@ -46,7 +56,7 @@ class OrderBookSnapshot:
         self.data = []
         for _ in range(10):
             lbl = tk.Label(
-                self.table, text=f"{f"---,--":<33} ---,--", bg=TABLE_BG, font=("Arial", 7), fg=WHITE)
+                self.table, text=f"{f"---,--":<33} ---,--", bg=C.TABLE_BG, font=("Arial", 7), fg=C.WHITE)
             self.data.append(lbl)
             lbl.pack()
 

@@ -1,21 +1,19 @@
 # Tkinter
 import tkinter as tk
-from tkinter import ttk
 
 # API
 import websocket
 import json
 import threading
-import requests
 
 import config as C
 
 
 class OrderBookSnapshot:
-    def __init__(self, parent, current):
+    def __init__(self, parent, current, current_order, current_show):
         self.root = parent
-        self.current_order_book = "BID (BUYS)"  # Set default
-        self.show = "ASK (SELLS)"  # Set default
+        self.current_order_book = current_order
+        self.show = current_show
         self.is_active = True
 
         self.order = tk.Label(self.root, bg=C.INNER_BG, text="Order Book Snapshot", font=(

@@ -6,9 +6,9 @@ from tkinter import ttk
 import websocket
 import json
 import threading
-import requests
 
 import config as C
+
 
 class CryptoTicker:
 
@@ -54,9 +54,9 @@ class CryptoTicker:
             ws_url,
             on_message=self.on_message,
             on_error=lambda ws, err: print(
-                f"───{self.symbol} Price Error: {err}"),
+                f"───{self.display_name} Price Error: {err}"),
             on_close=lambda ws, s, m: print("", end=""),
-            on_open=lambda ws: print(f"───{self.symbol} Price Connected")
+            on_open=lambda ws: print(f"───{self.display_name} Price Connected")
         )
 
         threading.Thread(target=self.ws.run_forever, daemon=True).start()
@@ -65,7 +65,7 @@ class CryptoTicker:
         """Stop WebSocket connection."""
         if self.is_active and self.ws:
             self.ws.close()
-            print(f"───{self.symbol} Price Closed")
+            print(f"───{self.display_name} Price Closed")
             self.is_active = False
             self.ws = None
 
@@ -124,15 +124,6 @@ class MultiTickerApp:
         self.root.geometry("1000x600")
         self.is_active = True
 
-        # List of currency to show
-        self.TICKER_PAIRS = [
-            ("BTCUSDT", "BTC/USDT"), ("ETHUSDT", "ETH/USDT"),
-            ("XRPUSDT", "XRP/USDT"), ("BNBUSDT", "BNB/USDT"),
-            ("SOLUSDT", "SOL/USDT"), ("TRXUSDT", "TRX/USDT"),
-            ("DOGEUSDT", "DOGE/USDT"), ("ADAUSDT", "ADA/USDT"),
-            ("BCHUSDT", "BCH/USDT")
-        ]
-
         self.all_tickers = []
 
         # Create ticker panel
@@ -145,7 +136,7 @@ class MultiTickerApp:
             ticker_frame.grid_rowconfigure(i, weight=1)
 
         # Create and place the tickers in a 3x3
-        for i, (symbol, display_name) in enumerate(self.TICKER_PAIRS):
+        for i, (symbol, display_name) in enumerate(C.TICKER_PAIRS):
             row = i // 3  # 0, 0, 0, 1, 1, 1, 2, 2, 2
             col = i % 3   # 0, 1, 2, 0, 1, 2, 0, 1, 2
 

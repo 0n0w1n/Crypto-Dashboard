@@ -8,14 +8,15 @@ from components.candle_stick import CandleStick
 
 # Tkinter
 import tkinter as tk
-from tkinter import ttk
 
 import config as C
 
 
 class MainDashBoard:
-    def __init__(self, root):
-        self.current = "BTC/USDT"  # Starting Program with BTC/USDT
+    def __init__(self, root, load, save):
+        self.load = load
+        self.save = save
+        self.current = load["current"]
         self.root = root
         self.root.title("Crypto Dashboard")
         self.root.geometry("1000x600")
@@ -39,38 +40,54 @@ class MainDashBoard:
         self.frame2.pack(pady=1, side=tk.LEFT, fill="y")
 
         # Order book table
-        self.orderbook = OrderBookSnapshot(self.frame2, self.current)
+        self.orderbook = OrderBookSnapshot(self.frame2, self.current,
+                                           load["current_order"], load["current_show"])
 
         # Stat table
         self.stat = Statistics(self.frame2, self.current)
 
         # Main Crypto Price
-        self.crypto_frame = tk.Frame(self.root, relief="solid", bg=C.BACKGROUND)
+        self.crypto_frame = tk.Frame(
+            self.root, relief="solid", bg=C.BACKGROUND)
         self.crypto_frame.pack(side='top', fill='x', padx=10, pady=10)
 
-        self.main_crypto_display = MainCryptoPrice(self.crypto_frame,self.change_main_coin)
+        self.main_crypto_display = MainCryptoPrice(
+            self.crypto_frame, self.change_main_coin)
 
         # Candle stick Frame
         self.candle_stick_frame = tk.Frame(self.root, bg=C.MAIN_BG)
         self.candle_stick_frame.pack(
             side=tk.LEFT, fill=tk.BOTH, padx=21, pady=(0, 20), expand=True)
         self.candle_stick_frame.propagate(False)
-        self.candle_stick = CandleStick(self.candle_stick_frame)
+        self.candle_stick = CandleStick(
+            self.candle_stick_frame, self.current, load['interval'])
         self.candle_stick.pack(fill=tk.BOTH, expand=True)
 
         # Overall Price table
         self.overall_price = Overall_price(self.root)
 
-    def change_main_coin(self, symbol): # Changing main coin from main crypto price button
+    # Changing main coin from main crypto price button
+    def change_main_coin(self, symbol):
+        print("\n--Changing Main coin--")
         self.current = symbol
 
         # Update
         self.current_dashboard.config(text=self.current)
         self.orderbook.change_symbol(self.current)
         self.stat.change_symbol(self.current)
+        self.candle_stick.change_interval(self.current)
+
+        print(f"--Change Main coin to {self.current}--")
 
     def on_closing(self):
         print("\nStopping all WebSocket connections...")  # Stoping Text
+        # Save Setting before close
+        self.save({
+            "current": self.current,
+            "interval": self.candle_stick.interval,
+            "current_order": self.orderbook.current_order_book,
+            "current_show": self.orderbook.show
+        })
 
         # Closing another window First
         try:  # use try in case that naver open it
@@ -86,12 +103,6 @@ class MainDashBoard:
         print("Stopping Main Crypto Price Connection")
         for ticker in self.main_crypto_display.main_crypto_display:
             ticker.stop()
+        self.candle_stick.on_closing()
 
         self.root.destroy()
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = MainDashBoard(root)
-    root.protocol("WM_DELETE_WINDOW", app.on_closing)
-    root.mainloop()

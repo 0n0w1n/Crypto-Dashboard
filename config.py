@@ -1,12 +1,3 @@
-import tkinter as tk
-from tkinter import ttk
-import websocket
-import json
-import threading
-import requests
-
-
-
 # Background colors
 MAIN_BG = "#37354B"
 WHITE = "#FFFFFF"
@@ -28,4 +19,4 @@ TICKER_PAIRS = [
     ("SOLUSDT", "SOL/USDT"), ("TRXUSDT", "TRX/USDT"),
     ("DOGEUSDT", "DOGE/USDT"), ("ADAUSDT", "ADA/USDT"),
     ("BCHUSDT", "BCH/USDT")
-    ]
+]

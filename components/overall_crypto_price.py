@@ -1,15 +1,8 @@
 # Tkinter
 import tkinter as tk
-from tkinter import ttk
-
-# API
-import websocket
-import json
-import threading
-import requests
 
 import config as C
-from .crypto_price import CryptoTicker,MultiTickerApp
+from .crypto_price import CryptoTicker, MultiTickerApp
 
 
 class Overall_price:

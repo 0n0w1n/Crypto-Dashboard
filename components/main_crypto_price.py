@@ -1,19 +1,13 @@
 # Tkinter
 import tkinter as tk
-from tkinter import ttk
-
-# API
-import websocket
-import json
-import threading
-import requests
 
 from .crypto_price import CryptoTicker
 import config as C
 
+
 class MainCryptoPrice:
-    def __init__(self, parent,change):
-        self.crypto_frame = parent    
+    def __init__(self, parent, change):
+        self.crypto_frame = parent
 
         # Create crypto price
         self.button = []

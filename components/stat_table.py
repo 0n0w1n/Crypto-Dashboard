@@ -80,6 +80,7 @@ class Statistics:
         self.kline1h = f"{self.symbol}@kline_1h"
         self.best_bid_ask_ws = f"{self.symbol}@bookTicker"
         self.multi_url = f"wss://stream.binance.com:9443/stream?streams={self.last_trade_ws}/{self.current_ticker_ws}/{self.kline1h}/{self.best_bid_ask_ws}"
+        self.api.ws_url = self.multi_url
 
         self.is_active = True
         self.start()

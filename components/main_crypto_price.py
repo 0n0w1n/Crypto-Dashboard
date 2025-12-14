@@ -6,7 +6,7 @@ import config as C
 
 
 class MainCryptoPrice:
-    def __init__(self, parent, change):
+    def __init__(self, parent, change, current):
         self.crypto_frame = parent
 
         # Create crypto price
@@ -31,11 +31,29 @@ class MainCryptoPrice:
             self.main_crypto_display.append(self.coin)
 
             # Create button to change main coin
-            self.btn = tk.Button(self.coin.frame, text="►", font=("Arial", 6),
+            self.coin.btn = tk.Button(self.coin.frame, text="►", font=("Arial", 6),
                                  bg=C.BUTTON_BG, fg=C.BUTTON, command=lambda d=display: change(d))
-            self.btn.place(x=4, y=52)
+            self.coin.btn.place(x=4, y=52)
+
+        # Update button in use
+        self.button_update(current,None,change)
 
         # Start all coin
         print("Starting Main Crypto Price Connection")
         for i in self.main_crypto_display:
             i.start()
+
+    def button_update(self,inuse,old_inuse,change):
+        for i in self.main_crypto_display:
+            text = i.title.cget("text")
+            if text == inuse:
+                i.btn.destroy()
+                i.btn = tk.Label(i.frame, text="►", font=("Arial", 6),
+                                    bg=C.TABLE_BG, fg=C.BACKGROUND)
+                i.btn.place(x=4, y=52)
+            elif text == old_inuse:
+                i.btn.destroy()
+                i.btn = tk.Button(i.frame, text="►", font=("Arial", 6),
+                                 bg=C.BUTTON_BG, fg=C.BUTTON, command=lambda d=text: change(d))
+                i.btn.place(x=4, y=52)
+                

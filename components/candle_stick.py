@@ -1,8 +1,7 @@
-# Import Tkinter
+# Import Tkinter, config and api
 import tkinter as tk
-
-# For API
-import requests
+import config as C
+from utils.api import RestAPI
 
 # Candle stick drawing
 import matplotlib.pyplot as plt
@@ -10,12 +9,13 @@ from datetime import datetime
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-import config as C
-
 
 class CandleStick(tk.Frame):
     def __init__(self, parent, symbol, interval_start):
         super().__init__(parent)
+        # Setup api
+        self.url = "https://api.binance.com/api/v3/klines"
+        self.api = RestAPI(self.url)
 
         # For closing
         self.bind("<Destroy>", lambda e: plt.close(self.fig))
@@ -28,24 +28,36 @@ class CandleStick(tk.Frame):
         self.limit = 50
         self.update_interval_ms = 5000  # 5s
 
-        btn_frame = tk.Frame(self, bg=C.MAIN_BG)
-        btn_frame.pack(fill=tk.X)
-
-        # Button to change between 24H and 1m
-        tk.Button(
-            btn_frame, text="1 minute",
-            command=lambda: self.change_interval(self.symbol, "1 Minute"), bg=C.BUTTON_BG, fg=C.BUTTON
-        ).pack(side=tk.LEFT, padx=(5, 0), pady=5)
-
-        tk.Button(
-            btn_frame, text="1 hour",
-            command=lambda: self.change_interval(self.symbol, "1 Hour"), bg=C.BUTTON_BG, fg=C.BUTTON
-        ).pack(side=tk.LEFT, padx=5, pady=5)
+        self.btn_frame = tk.Frame(self, bg=C.MAIN_BG)
+        self.btn_frame.pack(fill=tk.X)
 
         # Text for candle stick
-        self.text = tk.Label(btn_frame, text=f"{self.display} {self.interval} Candlestick (Last 50 {self.interval[2:]}s)",
+        self.text = tk.Label(self.btn_frame, text=f"{self.display} {self.interval} Candlestick (Last 50 {self.interval[2:]}s)",
                              bg=C.MAIN_BG, font=("Arial", 10), fg=C.WHITE)
         self.text.pack()
+
+        # Button to change between 24H and 1m
+        self.all_btn = []
+
+        self.btn1 = tk.Button(
+            self.btn_frame, text="1 Minute",
+            command=lambda: self.change_interval(self.symbol, "1 Minute"), bg=C.BUTTON_BG, fg=C.BUTTON)
+        self.btn1.pack(side=tk.LEFT, padx=(5, 0), pady=5)
+
+        self.btn2 = tk.Button(
+            self.btn_frame, text="1 Hour",
+            command=lambda: self.change_interval(self.symbol, "1 Hour"), bg=C.BUTTON_BG, fg=C.BUTTON)
+        self.btn2.pack(side=tk.LEFT, padx=5, pady=5)
+
+        self.btn3 = tk.Button(
+            self.btn_frame, text="1 Day",
+            command=lambda: self.change_interval(self.symbol, "1 Day"), bg=C.BUTTON_BG, fg=C.BUTTON)
+        self.btn3.pack(side=tk.LEFT, padx=5, pady=5)
+
+        self.all_btn.append(self.btn1)
+        self.all_btn.append(self.btn2)
+        self.all_btn.append(self.btn3)
+        self.btn_click(self.interval)
 
         # Create Frame
         self.fig, (self.x_price, self.x_vol) = plt.subplots(
@@ -146,6 +158,24 @@ class CandleStick(tk.Frame):
         self.fig.tight_layout()
         self.canvas.draw()
 
+    def btn_click(self, interval_button):
+        inuse = interval_button
+
+        for i, btn in enumerate(self.all_btn):
+            text = btn.cget("text")
+
+            if text == inuse:
+                button = tk.Label(
+                    self.btn_frame, text=inuse, bg=C.TABLE_BG, fg=C.BACKGROUND)
+            else:
+                button = tk.Button(
+                    self.btn_frame, text=text, bg=C.BUTTON_BG, fg=C.BUTTON,
+                    command=lambda t = text: self.change_interval(self.symbol,t))
+                
+            button.pack(side=tk.LEFT, padx=(5, 0), pady=5)
+            btn.destroy()
+            self.all_btn[i] = button
+
     def change_interval(self, current, interval=None):
         self.display = current
         self.symbol = current.replace("/", "")
@@ -153,6 +183,7 @@ class CandleStick(tk.Frame):
         # Set Interval
         if interval != None:
             self.interval = interval
+        self.btn_click(self.interval)
 
         # Change text
         print(f"Changing Candlestick to {self.display} ({self.interval})")
@@ -179,13 +210,13 @@ class CandleStick(tk.Frame):
             pass
 
     def get_data(self):
-        url = "https://api.binance.com/api/v3/klines"
         params = {
             "symbol": self.symbol,
             "interval": self.interval_update,
             "limit": self.limit
         }
-        return requests.get(url, params=params).json()
+
+        return self.api.get_data(params)
 
     def on_closing(self):
         print("Closing Candle Stick")

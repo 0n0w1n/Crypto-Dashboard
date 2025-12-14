@@ -1,6 +1,8 @@
 {
-    "current": "ETH/USDT",
-    "interval": "1 Hour",
-    "current_order": "ASK (SELLS)",
-    "current_show": "BID (BUYS)"
+    "current": "BTC/USDT",
+    "interval": "1 Minute",
+    "current_order": "BID (BUYS)",
+    "current_show": "ASK (SELLS)",
+    "overall": 1,
+    "full_price": 0
 }

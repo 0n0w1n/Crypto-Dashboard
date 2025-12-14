@@ -1,14 +1,9 @@
-# Tkinter
+# Tkinter and config
 import tkinter as tk
-from tkinter import ttk
+import config as C
 
 # API
-import websocket
-import json
-import threading
-import requests
-
-import config as C
+from utils.api import BinanceAPI, RestAPI
 
 
 class Statistics:
@@ -26,6 +21,7 @@ class Statistics:
 
         # Combine 3 urls in one
         self.multi_url = f"wss://stream.binance.com:9443/stream?streams={self.last_trade_ws}/{self.current_ticker_ws}/{self.kline1h}/{self.best_bid_ask_ws}"
+        self.api = BinanceAPI(self.multi_url)
 
         # Create table
         self.table = tk.Frame(self.root, bg=C.TABLE_BG, height=200)
@@ -70,8 +66,8 @@ class Statistics:
 
     def change_symbol(self, symbol):
         # Check for deactivate first
-        if self.ws:
-            self.ws.close()
+        if self.api.ws:
+            self.api.ws.close()
             print(f"Stat Table ({self.current}) Closed")
 
         self.is_active = False
@@ -90,91 +86,91 @@ class Statistics:
         self.marketcap()
 
     def start(self):
-        self.ws = websocket.WebSocketApp(
-            self.multi_url,
-            on_message=self.on_message,
-            on_error=lambda ws, err: print(
-                f"Stat Table ({self.current}) Error: {err}"),
-            on_close=lambda ws, s, m: print("", end=""),
-            on_open=lambda ws: print(f"Stat Table ({self.current}) Connected"))
+        # Start API
+        self.api.start(self.on_message,
+                       lambda ws, err: print(
+                           f"Stat Table ({self.current}) Error: {err}"),
+                       lambda ws, s, m: print("", end=""),
+                       lambda ws: print(
+                           f"Stat Table ({self.current}) Connected")
+                       )
 
-        threading.Thread(target=self.ws.run_forever, daemon=True).start()
-
-    def on_message(self, ws, message):
+    def on_message(self):
         try:
             # Check for active and table exist
             if self.is_active and self.table.winfo_exists():
-                data = json.loads(message)
-                name = data['stream']
-                stream_data = data['data']
+                name = self.api.data['stream']
+                stream_data = self.api.data['data']
 
                 # Check name of each api for call different on_message
                 if name == f"{self.symbol}@trade":
-                    self.on_message1(ws, stream_data)
+                    self.last_trade_price2.config(
+                        text=f"{float(stream_data['p']):.2f}")
+
                 elif name == f"{self.symbol}@ticker":
-                    self.on_message2(ws, stream_data)
+                    # 24h change
+                    self.change242.config(
+                        text=f"{float(stream_data['P']):.2f}%")
+
+                    # Change colors
+                    if float(stream_data['P']) < 0:
+                        self.change242.config(fg=C.RED)
+                    else:
+                        self.change242.config(
+                            text=f"+{float(stream_data['P']):.2f}%", fg=C.GREEN)
+
+                    # 24h volume
+                    self.vol242.config(
+                        text=f"{float(stream_data['q'])/1000000:.2f}M")
+
                 elif name == f"{self.symbol}@kline_1h":
-                    self.on_message3(ws, stream_data)
+                    # 1H change
+                    kline = stream_data['k']
+                    open_price = float(kline['o'])
+                    close_price = float(kline['c'])
+
+                    # Calculate 1h change
+                    change1hour = ((close_price-open_price)*100)/open_price
+                    self.change12.config(text=f"{change1hour:.2f}%")
+
+                    # Change colors
+                    if change1hour < 0:
+                        self.change12.config(fg=C.RED)
+                    else:
+                        self.change12.config(
+                            text=f"+{change1hour:.2f}%", fg=C.GREEN)
+
+                    # 1H volume
+                    self.vol12.config(text=f"{float(kline['q'])/1000000:.2f}M")
+
                 elif name == f"{self.symbol}@bookTicker":
-                    self.on_message4(ws, stream_data)
+                    # Best bid price
+                    self.best_bid2.config(
+                        text=f"{float(stream_data['b']):.2f}")
+
+                    # Best ask price
+                    self.best_ask2.config(
+                        text=f"{float(stream_data['a']):.2f}")
+
         except tk.TclError:
             pass
-
-    def on_message1(self, ws, data):
-        self.last_trade_price2.config(text=f"{float(data['p']):.2f}")
-
-    def on_message2(self, ws, data):
-        # 24h change
-        self.change242.config(text=f"{float(data['P']):.2f}%")
-        # Change colors
-        if float(data['P']) < 0:
-            self.change242.config(fg=C.RED)
-        else:
-            self.change242.config(text=f"+{float(data['P']):.2f}%", fg=C.GREEN)
-
-        # 24h volume
-        self.vol242.config(text=f"{float(data['q'])/1000000:.2f}M")
-
-    def on_message3(self, ws, data):
-        # 1H change
-        kline = data['k']
-        open_price = float(kline['o'])
-        close_price = float(kline['c'])
-
-        # Calculate 1h change
-        change1hour = ((close_price-open_price)*100)/open_price
-        self.change12.config(text=f"{change1hour:.2f}%")
-
-        # Change colors
-        if change1hour < 0:
-            self.change12.config(fg=C.RED)
-        else:
-            self.change12.config(text=f"+{change1hour:.2f}%", fg=C.GREEN)
-
-        # 1H volume
-        self.vol12.config(text=f"{float(kline['q'])/1000000:.2f}M")
-
-    def on_message4(self, ws, data):
-        # Best bid price
-        self.best_bid2.config(text=f"{float(data['b']):.2f}")
-
-        # Best ask price
-        self.best_ask2.config(text=f"{float(data['a']):.2f}")
 
     def marketcap(self):
         # Market cap data from REST API coingecko.com
         self.url = 'https://api.coingecko.com/api/v3/coins/markets'
+        self.restapi = RestAPI(self.url)
 
         # Map coin format
         self.coin_ids = {
-            "BTC": "bitcoin",
-            "ETH": "ethereum",
-            "XRP": "ripple",
-            "BNB": "binancecoin",
-            "SOL": "solana"
+            "BTCUSDT": "bitcoin",
+            "ETHUSDT": "ethereum",
+            "XRPUSDT": "ripple",
+            "BNBUSDT": "binancecoin",
+            "SOLUSDT": "solana"
         }
+
         for i in self.coin_ids:
-            if self.symbol.replace("usdt", "").upper() == i:
+            if self.symbol.upper() == i:
                 self.coin_id = self.coin_ids[i]
                 break
 
@@ -187,17 +183,19 @@ class Statistics:
             'sparkline': 'false'
         }
 
-        # request data from coingecko
-        response = requests.get(self.url, params=parameters)
-        data = response.json()
-        market_cap = data[0]["market_cap"]
+        # Data from coingecko
+        try:
+            market_cap = self.restapi.get_data(parameters)[0]["market_cap"]
 
-        # Display market 1 time when start program
-        self.market_cap2.config(text=f"{float(market_cap)/1000000000:.2f}B")
+            # Display market 1 time when start program
+            self.market_cap2.config(text=f"{float(market_cap)/1000000000:.2f}B")
+
+        except:
+            self.market_cap2.config(text="Request Fail (try again)")
 
     def on_closing(self):
-        if self.ws:
+        if self.api.ws:
             self.is_active = False
-            self.ws.close()
+            self.api.ws.close()
             print(f"Stat Table ({self.current}) Closed")
         self.root.destroy()

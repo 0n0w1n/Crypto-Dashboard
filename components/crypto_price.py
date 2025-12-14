@@ -1,13 +1,10 @@
-# Tkinter
+# Tkinter and config
 import tkinter as tk
 from tkinter import ttk
+import config as C
 
 # API
-import websocket
-import json
-import threading
-
-import config as C
+from utils.api import BinanceAPI
 
 
 class CryptoTicker:
@@ -50,37 +47,34 @@ class CryptoTicker:
         self.is_active = True
         ws_url = f"wss://stream.binance.com:9443/ws/{self.symbol}@ticker"
 
-        self.ws = websocket.WebSocketApp(
-            ws_url,
-            on_message=self.on_message,
-            on_error=lambda ws, err: print(
-                f"───{self.display_name} Price Error: {err}"),
-            on_close=lambda ws, s, m: print("", end=""),
-            on_open=lambda ws: print(f"───{self.display_name} Price Connected")
-        )
-
-        threading.Thread(target=self.ws.run_forever, daemon=True).start()
+        self.api = BinanceAPI(ws_url)
+        self.api.start(self.on_message,
+                       lambda ws, err: print(
+                           f"───{self.display_name} Price Error: {err}"),
+                       lambda ws, s, m: print("", end=""),
+                       lambda ws: print(
+                           f"───{self.display_name} Price Connected")
+                       )
 
     def stop(self):
         """Stop WebSocket connection."""
-        if self.is_active and self.ws:
-            self.ws.close()
+        if self.is_active and self.api.ws:
+            self.api.ws.close()
             print(f"───{self.display_name} Price Closed")
             self.is_active = False
             self.ws = None
 
-    def on_message(self, ws, message):
+    def on_message(self):
         """Handle price updates."""
         if not self.is_active:
             return
 
         try:
             if self.parent.winfo_exists():
-                data = json.loads(message)
                 # 'c' = close price, 'p' = price change, 'P' = percent change
-                price = float(data['c'])
-                change = float(data['p'])
-                percent = float(data['P'])
+                price = float(self.api.data['c'])
+                change = float(self.api.data['p'])
+                percent = float(self.api.data['P'])
 
                 # Schedule GUI update on main thread
                 self.parent.after(0, self.update_display,
@@ -118,32 +112,35 @@ class CryptoTicker:
 
 
 class MultiTickerApp:
-    def __init__(self, root):
+    def __init__(self, root,load):
         self.root = root
-        self.root.title("Crypto Dashboard")
-        self.root.geometry("1000x600")
         self.is_active = True
+        self.oc = load["full_price"]
 
         self.all_tickers = []
 
         # Create ticker panel
-        ticker_frame = tk.Frame(root, bg=C.MAIN_BG)
-        ticker_frame.pack(fill=tk.BOTH, expand=True)
+        self.ticker_frame = tk.Frame(root, bg=C.MAIN_BG)
 
         # Expand column and row equally
         for i in range(3):
-            ticker_frame.grid_columnconfigure(i, weight=1)
-            ticker_frame.grid_rowconfigure(i, weight=1)
+            self.ticker_frame.grid_columnconfigure(i, weight=1)
+            self.ticker_frame.grid_rowconfigure(i, weight=1)
 
         # Create and place the tickers in a 3x3
         for i, (symbol, display_name) in enumerate(C.TICKER_PAIRS):
             row = i // 3  # 0, 0, 0, 1, 1, 1, 2, 2, 2
             col = i % 3   # 0, 1, 2, 0, 1, 2, 0, 1, 2
 
-            ticker = CryptoTicker(ticker_frame, symbol, display_name)
+            ticker = CryptoTicker(self.ticker_frame, symbol, display_name)
 
             ticker.pack(row=row, column=col, padx=10, pady=10, sticky="nsew")
             self.all_tickers.append(ticker)
+
+        # Hide button
+        self.hide_button = tk.Button(self.ticker_frame, font=("Arial", 10), fg=C.BUTTON,
+                                     bg=C.BUTTON_BG, text="Hide", command=self.forget)
+        self.hide_button.place(relx=1.0,rely=0.0,relheight=0.05,relwidth=0.05,anchor="ne")
 
         # Start all tickers
         print("\nStarting Crypto Price Connection (Full)")
@@ -157,4 +154,8 @@ class MultiTickerApp:
         for ticker in self.all_tickers:
             ticker.stop()
 
-        self.root.destroy()
+        self.ticker_frame.destroy()
+
+    def forget(self):
+        self.ticker_frame.place_forget()
+        self.oc = 0

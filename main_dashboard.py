@@ -52,7 +52,7 @@ class MainDashBoard:
         self.crypto_frame.pack(side='top', fill='x', padx=10, pady=10)
 
         self.main_crypto_display = MainCryptoPrice(
-            self.crypto_frame, self.change_main_coin)
+            self.crypto_frame, self.change_main_coin,self.current)
 
         # Candle stick Frame
         self.candle_stick_frame = tk.Frame(self.root, bg=C.MAIN_BG)
@@ -64,12 +64,31 @@ class MainDashBoard:
         self.candle_stick.pack(fill=tk.BOTH, expand=True)
 
         # Overall Price table
-        self.overall_price = Overall_price(self.root)
+        self.overall_price = Overall_price(self.root,self.button_overall,load)
+
+        # Button for show overall price
+        self.show_overall = tk.Button(
+            self.candle_stick.btn_frame, text="☰",
+            command=self.overall_price.show, bg=C.BUTTON_BG, fg=C.BUTTON)
+        
+        # load save for overall price open or not
+        if self.overall_price.oc == 0:
+            self.overall_price.hide()            
+        
+    def button_overall(self,state):
+        if state == "on":
+            self.show_overall.place(relx=1,rely=0,anchor="ne")
+        else:
+            self.show_overall.place_forget()
 
     # Changing main coin from main crypto price button
     def change_main_coin(self, symbol):
         print("\n--Changing Main coin--")
+        self.old = self.current
         self.current = symbol
+
+        # Update button in use
+        self.main_crypto_display.button_update(self.current,self.old,self.change_main_coin)
 
         # Update
         self.current_dashboard.config(text=self.current)
@@ -86,7 +105,9 @@ class MainDashBoard:
             "current": self.current,
             "interval": self.candle_stick.interval,
             "current_order": self.orderbook.current_order_book,
-            "current_show": self.orderbook.show
+            "current_show": self.orderbook.show,
+            "overall": self.overall_price.oc,
+            "full_price": self.overall_price.app.oc,
         })
 
         # Closing another window First

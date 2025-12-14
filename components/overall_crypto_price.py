@@ -6,8 +6,10 @@ from .crypto_price import CryptoTicker, MultiTickerApp
 
 
 class Overall_price:
-    def __init__(self, parent):
+    def __init__(self, parent,button,load):
         self.root = parent
+        self.button = button
+        self.oc = load["overall"]
 
         # Create main frame
         self.frame = tk.Frame(self.root, width=180, bg=C.MAIN_BG)
@@ -47,20 +49,35 @@ class Overall_price:
             ticker.start()
 
         # Create button to open crypto_price
-        self.btn = tk.Button(self.frame, command=self.open_crypto_price, text="☰", font=(
-            "Arial", 10), fg=C.BUTTON, bg=C.BUTTON_BG)
+        self.app = MultiTickerApp(self.root,load)
+        self.btn = tk.Button(self.frame, command=self.open_crypto_price, text="☰", 
+                             font=("Arial", 10), fg=C.BUTTON, bg=C.BUTTON_BG)
         self.btn.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.c = 0
+        
+        # load save for show crypto_price
+        if self.app.oc == 1:
+            self.open_crypto_price()
+
+        # Create button to hide overall price in candlestick frame
+        self.btn = tk.Button(self.frame, command=self.hide, text="─", 
+                             font=("Arial", 10), fg=C.BUTTON, bg=C.BUTTON_BG)
+        self.btn.grid(row=0, column=0, padx=5, pady=5, sticky="e")
 
     def open_crypto_price(self):
-        if self.c == 0 or self.app.active == False:
-            self.c += 1
-            self.root = tk.Tk()
-            self.app = MultiTickerApp(self.root)
-            self.root.protocol("WM_DELETE_WINDOW", self.app.on_closing)
-            self.root.mainloop()
-        else:
-            print("Crypto Price is already open")
+        self.app.ticker_frame.place(
+                relx=0.5, rely=0.5, relheight=1, relwidth=1, anchor="center")
+        self.app.oc = 1
+        
+    def hide(self):
+        self.frame.pack_forget()
+        self.button("on")
+        self.oc = 0
+
+    def show(self):
+        self.frame.pack(side=tk.LEFT, pady=(0, 20), padx=(0, 21), fill="y")
+        self.button("off")
+        self.oc = 1
 
     def on_closing(self):
         print("Stopping Overall Crypto Price Connection")

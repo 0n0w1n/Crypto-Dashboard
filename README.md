@@ -58,7 +58,7 @@ It displays real-time market data such as price, candlestick chart with volume, 
     │ ├── api.py                     # API Helper Functions
     │ └── storage.py                 # Save/Load Logic
     ├── requirements.txt             # Requirements Module
-    ├── settings.json              # Save File for User Settings
+    ├── settings.json                # Save File for User Settings
     └── README.md
 ## API
 - ### Rest API
@@ -129,8 +129,3 @@ Saves and loads user settings.
 
 - `utils/settings.json`  
 Stores application settings.
-
-## Known Issues
-- UI may freeze on slow network
-- UI may freeze for 0.5 second every 5 second for load candlestick
-- WebSocket reconnect not implemented
